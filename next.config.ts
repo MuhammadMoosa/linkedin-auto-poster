@@ -6,6 +6,13 @@ const projectRoot = path.resolve(__dirname);
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: projectRoot,
+  outputFileTracingIncludes: {
+    "/*": ["./data/**/*"],
+    "/api/images/[day]": ["./data/images/**/*"],
+    "/api/publish": ["./data/**/*"],
+    "/api/days": ["./data/**/*"],
+    "/api/status": ["./data/**/*"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",

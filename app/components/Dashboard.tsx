@@ -676,7 +676,7 @@ npm run post:schedule:status    # check schedule + next day`}</pre>
       </section>
 
       <div className="stats-grid">
-        {status.summaryStats.map((stat) => (
+        {(status.summaryStats ?? []).map((stat) => (
           <StatCard key={stat.id} stat={stat} />
         ))}
       </div>

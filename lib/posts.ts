@@ -227,7 +227,7 @@ export function buildStatus(content: FullContentSchema): StatusResponse {
     nextScheduledPost,
     campaignComplete: remainingCount === 0,
     meta: content.meta,
-    summaryStats: content.summaryStats,
+    summaryStats: content.summaryStats ?? [],
   };
 }
 
@@ -475,7 +475,8 @@ export async function getPreview(dayNumber?: number): Promise<PreviewResponse | 
 export async function getAllDayPreviews(): Promise<PreviewResponse[]> {
   const { content } = await loadContent();
   const sorted = [...content.days].sort((a, b) => a.day - b.day);
-  return Promise.all(sorted.map((day) => buildPreviewAsync(day)));
+  // Sync preview — avoids 10+ file/GitHub checks on every dashboard load
+  return sorted.map((day) => buildPreview(day));
 }
 
 export async function getStatus(): Promise<StatusResponse> {

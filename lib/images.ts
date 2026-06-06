@@ -109,6 +109,14 @@ async function readImageAtPath(
     }
   }
 
+  // Prefer bundled deploy files (fast on Vercel) before GitHub API
+  try {
+    const buffer = await readFile(absolutePath);
+    return { buffer, mimeType, filename, relativePath };
+  } catch {
+    // not in deploy bundle
+  }
+
   if (isGitHubConfigured()) {
     try {
       const buffer = await readBinaryFromGitHub(relativePath);
@@ -116,16 +124,11 @@ async function readImageAtPath(
         return { buffer, mimeType, filename, relativePath };
       }
     } catch {
-      // fall through to bundled image
+      return null;
     }
   }
 
-  try {
-    const buffer = await readFile(absolutePath);
-    return { buffer, mimeType, filename, relativePath };
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function findDayImageFile(
