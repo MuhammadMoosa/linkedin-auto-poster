@@ -189,3 +189,79 @@ export async function writeContentToGitHub(
     commitSha: result.commit.sha,
   };
 }
+
+export async function readBinaryFromGitHub(
+  filePath: string
+): Promise<Buffer | null> {
+  const config = getGitHubConfig();
+  if (!config) return null;
+
+  const url = `${GITHUB_API_BASE}/repos/${config.owner}/${config.repo}/contents/${filePath}?ref=${config.branch}`;
+
+  const response = await fetchWithRetry(url, {
+    method: "GET",
+    headers: getGitHubHeaders(config.token),
+  });
+
+  if (response.status === 404) return null;
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new GitHubError(
+      `Failed to read ${filePath} from GitHub`,
+      response.status,
+      details
+    );
+  }
+
+  const data = (await response.json()) as GitHubContentResponse;
+  return Buffer.from(data.content, "base64");
+}
+
+export async function writeBinaryToGitHub(
+  filePath: string,
+  buffer: Buffer,
+  commitMessage: string
+): Promise<void> {
+  const config = getGitHubConfig();
+  if (!config) {
+    throw new GitHubError("GitHub is not configured", 500);
+  }
+
+  const url = `${GITHUB_API_BASE}/repos/${config.owner}/${config.repo}/contents/${filePath}`;
+
+  let sha: string | undefined;
+  const existing = await fetchWithRetry(url, {
+    method: "GET",
+    headers: getGitHubHeaders(config.token),
+  });
+  if (existing.ok) {
+    const existingData = (await existing.json()) as GitHubContentResponse;
+    sha = existingData.sha;
+  }
+
+  const response = await fetchWithRetry(url, {
+    method: "PUT",
+    headers: {
+      ...getGitHubHeaders(config.token),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message: commitMessage,
+      content: buffer.toString("base64"),
+      sha,
+      branch: config.branch,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new GitHubError(
+      `Failed to write ${filePath} to GitHub`,
+      response.status,
+      details
+    );
+  }
+
+  logger.info("Binary file saved to GitHub", { path: filePath });
+}

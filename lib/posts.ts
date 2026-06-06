@@ -12,6 +12,12 @@ import {
   publishToLinkedIn,
   LinkedInError,
 } from "./linkedin";
+import {
+  dayHasImage,
+  resolveDayImage,
+  saveDayImage,
+  validateImageFile,
+} from "./images";
 import type {
   ContentFileMetadata,
   DayPost,
@@ -50,6 +56,14 @@ function parseContent(raw: string): FullContentSchema {
     if (!parsed.meta || !Array.isArray(parsed.days)) {
       throw new PostsError("Invalid content.json structure", 500);
     }
+
+    parsed.days = parsed.days.map((day) => ({
+      ...day,
+      posted: day.posted ?? false,
+      postedAt: day.postedAt ?? null,
+      linkedInPostId: day.linkedInPostId ?? null,
+      imagePath: day.imagePath ?? null,
+    }));
 
     return parsed;
   } catch (error) {
@@ -125,25 +139,52 @@ export function findNextUnpublishedPost(
   return sorted.find((day) => !day.posted) ?? null;
 }
 
+export function findPostByDay(
+  content: FullContentSchema,
+  day: number
+): DayPost | null {
+  return content.days.find((entry) => entry.day === day) ?? null;
+}
+
 export function getPostedCount(content: FullContentSchema): number {
   return content.days.filter((day) => day.posted).length;
 }
 
-export function buildPreview(nextPost: DayPost): PreviewResponse {
+export function buildPreview(dayPost: DayPost): PreviewResponse {
   const formattedPreview = appendHashtagsToPost(
-    nextPost.linkedinPost,
-    nextPost.hashtags
+    dayPost.linkedinPost,
+    dayPost.hashtags
   );
 
+  const hasImage = Boolean(dayPost.imagePath);
+
   return {
-    day: nextPost.day,
-    title: nextPost.title,
-    topic: nextPost.topic,
+    day: dayPost.day,
+    title: dayPost.title,
+    topic: dayPost.topic,
     formattedPreview,
-    hashtags: nextPost.hashtags,
-    metricsHighlighted: nextPost.metricsHighlighted,
-    imageSuggestion: nextPost.imageSuggestion,
+    hashtags: dayPost.hashtags,
+    metricsHighlighted: dayPost.metricsHighlighted ?? [],
+    imageSuggestion: dayPost.imageSuggestion,
     characterCount: formattedPreview.length,
+    phase: dayPost.phase,
+    category: dayPost.category,
+    posted: dayPost.posted,
+    postedAt: dayPost.postedAt,
+    hasImage,
+    imagePreviewUrl: hasImage ? `/api/images/${dayPost.day}` : null,
+  };
+}
+
+export async function buildPreviewAsync(
+  dayPost: DayPost
+): Promise<PreviewResponse> {
+  const preview = buildPreview(dayPost);
+  const hasImage = await dayHasImage(dayPost.day, dayPost.imagePath);
+  return {
+    ...preview,
+    hasImage,
+    imagePreviewUrl: hasImage ? `/api/images/${dayPost.day}` : null,
   };
 }
 
@@ -161,47 +202,145 @@ export function buildStatus(content: FullContentSchema): StatusResponse {
       totalPosts > 0 ? Math.round((postedCount / totalPosts) * 100) : 0,
     nextScheduledPost,
     campaignComplete: remainingCount === 0,
+    meta: content.meta,
+    summaryStats: content.summaryStats,
   };
 }
 
-function updateTimelineStatus(
+async function persistPostedDay(
   content: FullContentSchema,
-  day: number
-): FullContentSchema {
-  return {
+  day: number,
+  postedAt: string,
+  linkedInPostId: string | null,
+  commitMessage: string
+): Promise<FullContentSchema> {
+  const updatedDays = content.days.map((entry) =>
+    entry.day === day
+      ? {
+          ...entry,
+          posted: true,
+          postedAt,
+          linkedInPostId,
+        }
+      : entry
+  );
+
+  const updatedContent: FullContentSchema = {
     ...content,
-    timeline: content.timeline.map((entry) =>
-      entry.day === day ? { ...entry, status: "posted" as const } : entry
-    ),
+    days: updatedDays,
   };
+
+  await saveContent(updatedContent, commitMessage);
+  return updatedContent;
 }
 
-export async function publishNextPost(): Promise<PublishResult> {
+export async function setDayImagePath(
+  dayNumber: number,
+  imagePath: string
+): Promise<void> {
   const { content } = await loadContent();
-  const nextPost = findNextUnpublishedPost(content);
+  const targetPost = findPostByDay(content, dayNumber);
 
-  if (!nextPost) {
+  if (!targetPost) {
+    throw new PostsError(`Day ${dayNumber} not found`, 404);
+  }
+
+  const updatedDays = content.days.map((entry) =>
+    entry.day === dayNumber ? { ...entry, imagePath } : entry
+  );
+
+  await saveContent(
+    { ...content, days: updatedDays },
+    `chore: attach image for day ${dayNumber}`
+  );
+}
+
+export async function uploadDayImage(
+  dayNumber: number,
+  buffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  validateImageFile(buffer, mimeType);
+
+  const { content } = await loadContent();
+  const targetPost = findPostByDay(content, dayNumber);
+
+  if (!targetPost) {
+    throw new PostsError(`Day ${dayNumber} not found`, 404);
+  }
+
+  const imagePath = await saveDayImage(dayNumber, buffer, mimeType);
+  await setDayImagePath(dayNumber, imagePath);
+
+  logger.info("Day image saved", { day: dayNumber, imagePath });
+
+  return imagePath;
+}
+
+export async function publishPostByDay(
+  dayNumber?: number,
+  options?: { imageBuffer?: Buffer; mimeType?: string; requireImage?: boolean }
+): Promise<PublishResult> {
+  const { content } = await loadContent();
+
+  const targetPost = dayNumber
+    ? findPostByDay(content, dayNumber)
+    : findNextUnpublishedPost(content);
+
+  if (!targetPost) {
+    if (dayNumber) {
+      throw new PostsError(`Day ${dayNumber} not found`, 404);
+    }
     throw new PostsError("All posts have already been published", 409);
   }
 
-  if (nextPost.posted) {
+  if (targetPost.posted) {
     throw new PostsError(
-      `Day ${nextPost.day} has already been posted — duplicate prevented`,
+      `Day ${targetPost.day} has already been posted — duplicate prevented`,
       409
     );
   }
 
   const fullPostText = appendHashtagsToPost(
-    nextPost.linkedinPost,
-    nextPost.hashtags
+    targetPost.linkedinPost,
+    targetPost.hashtags
   );
+
+  let imageBuffer = options?.imageBuffer;
+  let mimeType = options?.mimeType;
+
+  if (!imageBuffer) {
+    const resolved = await resolveDayImage(
+      targetPost.day,
+      targetPost.imagePath
+    );
+    if (resolved) {
+      imageBuffer = resolved.buffer;
+      mimeType = resolved.mimeType;
+    }
+  }
+
+  if (options?.requireImage && !imageBuffer) {
+    throw new PostsError(
+      `Day ${targetPost.day} requires an image. Upload one before publishing.`,
+      400
+    );
+  }
 
   let linkedInResult;
   try {
-    linkedInResult = await publishToLinkedIn(fullPostText);
+    linkedInResult = await publishToLinkedIn(fullPostText, {
+      imageBuffer,
+      mimeType,
+    });
   } catch (error) {
     if (error instanceof LinkedInError) {
-      logger.publishFailure(nextPost.day, nextPost.title, error.message, error.statusCode);
+      logger.publishFailure(
+        targetPost.day,
+        targetPost.title,
+        error.message,
+        error.statusCode
+      );
       throw new PostsError(error.message, error.statusCode, error.details);
     }
     throw error;
@@ -209,33 +348,18 @@ export async function publishNextPost(): Promise<PublishResult> {
 
   const postedAt = new Date().toISOString();
 
-  const updatedDays = content.days.map((day) =>
-    day.day === nextPost.day
-      ? {
-          ...day,
-          posted: true,
-          postedAt,
-          linkedInPostId: linkedInResult.id,
-        }
-      : day
-  );
-
-  let updatedContent: FullContentSchema = {
-    ...content,
-    days: updatedDays,
-  };
-
-  updatedContent = updateTimelineStatus(updatedContent, nextPost.day);
-
   try {
-    await saveContent(
-      updatedContent,
-      `chore: publish LinkedIn post day ${nextPost.day} — ${nextPost.title}`
+    await persistPostedDay(
+      content,
+      targetPost.day,
+      postedAt,
+      linkedInResult.id,
+      `chore: publish LinkedIn post day ${targetPost.day} — ${targetPost.title}`
     );
   } catch (error) {
     logger.publishFailure(
-      nextPost.day,
-      nextPost.title,
+      targetPost.day,
+      targetPost.title,
       "Post published to LinkedIn but failed to save state",
       error instanceof GitHubError ? error.statusCode : 500
     );
@@ -245,43 +369,92 @@ export async function publishNextPost(): Promise<PublishResult> {
       500,
       {
         linkedInPostId: linkedInResult.id,
-        day: nextPost.day,
+        day: targetPost.day,
         originalError: error instanceof Error ? error.message : String(error),
       }
     );
   }
 
   logger.publishSuccess(
-    nextPost.day,
-    nextPost.title,
+    targetPost.day,
+    targetPost.title,
     linkedInResult.id,
     linkedInResult.status
   );
 
   return {
     success: true,
-    day: nextPost.day,
-    title: nextPost.title,
+    day: targetPost.day,
+    title: targetPost.title,
     linkedInPostId: linkedInResult.id,
     postedAt,
-    message: `Successfully published day ${nextPost.day}: ${nextPost.title}`,
+    hasImage: linkedInResult.hasImage,
+    message: `Successfully published day ${targetPost.day}: ${targetPost.title}${linkedInResult.hasImage ? " (with image)" : ""}`,
   };
 }
 
-export async function getPreview(): Promise<PreviewResponse | null> {
+export async function markPostAsPosted(dayNumber: number): Promise<PublishResult> {
   const { content } = await loadContent();
-  const nextPost = findNextUnpublishedPost(content);
+  const targetPost = findPostByDay(content, dayNumber);
 
-  if (!nextPost) {
+  if (!targetPost) {
+    throw new PostsError(`Day ${dayNumber} not found`, 404);
+  }
+
+  if (targetPost.posted) {
+    throw new PostsError(`Day ${dayNumber} is already marked as posted`, 409);
+  }
+
+  const postedAt = new Date().toISOString();
+
+  await persistPostedDay(
+    content,
+    dayNumber,
+    postedAt,
+    "manual",
+    `chore: manually mark day ${dayNumber} as posted — ${targetPost.title}`
+  );
+
+  logger.info("Post marked as manually posted", {
+    day: dayNumber,
+    title: targetPost.title,
+  });
+
+  return {
+    success: true,
+    day: dayNumber,
+    title: targetPost.title,
+    postedAt,
+    manual: true,
+    message: `Day ${dayNumber} marked as posted (manual)`,
+  };
+}
+
+export async function publishNextPost(): Promise<PublishResult> {
+  return publishPostByDay();
+}
+
+export async function getPreview(dayNumber?: number): Promise<PreviewResponse | null> {
+  const { content } = await loadContent();
+
+  const targetPost = dayNumber
+    ? findPostByDay(content, dayNumber)
+    : findNextUnpublishedPost(content);
+
+  if (!targetPost) {
     return null;
   }
 
-  return buildPreview(nextPost);
+  return buildPreviewAsync(targetPost);
+}
+
+export async function getAllDayPreviews(): Promise<PreviewResponse[]> {
+  const { content } = await loadContent();
+  const sorted = [...content.days].sort((a, b) => a.day - b.day);
+  return Promise.all(sorted.map((day) => buildPreviewAsync(day)));
 }
 
 export async function getStatus(): Promise<StatusResponse> {
   const { content } = await loadContent();
   return buildStatus(content);
 }
-
-export { PostsError as default, GitHubError, LinkedInError };

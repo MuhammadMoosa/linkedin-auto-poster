@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo -H 127.0.0.1 -p ${PORT:-3005}",
+    "dev:clean": "rm -rf .next && next dev --turbo -H 127.0.0.1 -p ${PORT:-3005}",
+    "dev:webpack": "next dev -H 127.0.0.1 -p ${PORT:-3005}",
     "build": "next build",
-    "start": "next start",
+    "build:clean": "rm -rf .next && next build",
+    "start": "next start -H 127.0.0.1 -p ${PORT:-3005}",
+    "start:clean": "rm -rf .next && next build && next start -H 127.0.0.1 -p ${PORT:-3005}",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next"
   },
   "dependencies": {
     "next": "^15.1.0",
