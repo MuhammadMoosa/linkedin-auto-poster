@@ -421,9 +421,9 @@
         "Frontend",
         "SSR"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-06T09:28:47.394Z",
+      "linkedInPostId": "urn:li:share:7468957049498816512",
       "imagePath": "data/images/day-3.png"
     },
     {
