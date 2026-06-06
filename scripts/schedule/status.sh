@@ -1,10 +1,16 @@
 #!/bin/zsh
 set -euo pipefail
+setopt NULL_GLOB 2>/dev/null || true
 
 PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 PLIST_LABEL="com.linkedin-auto-poster.daily"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 LOG_DIR="$PROJECT_DIR/logs"
+GUI_DOMAIN="gui/$(id -u)"
+
+is_agent_loaded() {
+  launchctl print "${GUI_DOMAIN}/${PLIST_LABEL}" &>/dev/null
+}
 
 echo "LinkedIn daily schedule status"
 echo "=============================="
@@ -13,10 +19,10 @@ echo ""
 if [[ -f "$PLIST_PATH" ]]; then
   echo "Schedule: INSTALLED"
   echo "Plist:    $PLIST_PATH"
-  if launchctl list 2>/dev/null | grep -q "$PLIST_LABEL"; then
-    echo "Agent:    loaded"
+  if is_agent_loaded; then
+    echo "Agent:    loaded ✓"
   else
-    echo "Agent:    plist exists but not loaded — run npm run post:schedule:install"
+    echo "Agent:    NOT loaded — run: npm run post:schedule:install"
   fi
   HOUR=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Hour" "$PLIST_PATH" 2>/dev/null || echo "?")
   MINUTE=$(/usr/libexec/PlistBuddy -c "Print :StartCalendarInterval:Minute" "$PLIST_PATH" 2>/dev/null || echo "?")
@@ -39,13 +45,7 @@ fi
 
 echo ""
 echo "Recent logs:"
-LOG_FILES=()
-if [[ -d "$LOG_DIR" ]]; then
-  for f in "$LOG_DIR"/daily-post-*.log; do
-    [[ -e "$f" ]] || continue
-    LOG_FILES+=("$f")
-  done
-fi
+LOG_FILES=("$LOG_DIR"/daily-post-*.log)
 if (( ${#LOG_FILES[@]} )); then
   for f in "${LOG_FILES[@]:0:3}"; do
     echo "  $f"

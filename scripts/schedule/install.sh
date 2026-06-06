@@ -6,6 +6,7 @@ PLIST_LABEL="com.linkedin-auto-poster.daily"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 RUN_SCRIPT="$PROJECT_DIR/scripts/schedule/daily-run.sh"
 LOG_DIR="$PROJECT_DIR/logs"
+GUI_DOMAIN="gui/$(id -u)"
 
 HOUR="${POST_SCHEDULE_HOUR:-9}"
 MINUTE="${POST_SCHEDULE_MINUTE:-30}"
@@ -13,8 +14,8 @@ MINUTE="${POST_SCHEDULE_MINUTE:-30}"
 mkdir -p "$LOG_DIR" "$HOME/Library/LaunchAgents"
 chmod +x "$RUN_SCRIPT"
 
-if launchctl list 2>/dev/null | grep -q "$PLIST_LABEL"; then
-  launchctl bootout "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null || \
+if launchctl print "${GUI_DOMAIN}/${PLIST_LABEL}" &>/dev/null; then
+  launchctl bootout "$GUI_DOMAIN" "$PLIST_PATH" 2>/dev/null || \
     launchctl unload "$PLIST_PATH" 2>/dev/null || true
 fi
 
@@ -51,8 +52,18 @@ cat > "$PLIST_PATH" <<EOF
 </plist>
 EOF
 
-launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null || \
-  launchctl load "$PLIST_PATH" 2>/dev/null || LOAD_FAILED=1
+LOAD_FAILED=1
+if launchctl bootstrap "$GUI_DOMAIN" "$PLIST_PATH" 2>/dev/null; then
+  LOAD_FAILED=0
+elif launchctl load "$PLIST_PATH" 2>/dev/null; then
+  LOAD_FAILED=0
+fi
+
+if [[ "$LOAD_FAILED" == "0" ]] && launchctl print "${GUI_DOMAIN}/${PLIST_LABEL}" &>/dev/null; then
+  echo "✓ Launch agent loaded"
+else
+  LOAD_FAILED=1
+fi
 
 echo ""
 if [[ "${LOAD_FAILED:-}" == "1" ]]; then

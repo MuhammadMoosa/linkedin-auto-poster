@@ -24,7 +24,8 @@
     "post:schedule:install": "zsh scripts/schedule/install.sh",
     "post:schedule:uninstall": "zsh scripts/schedule/uninstall.sh",
     "post:schedule:status": "zsh scripts/schedule/status.sh",
-    "post:schedule:run": "zsh scripts/schedule/daily-run.sh"
+    "post:schedule:run": "zsh scripts/schedule/daily-run.sh",
+    "linkedin:oauth": "node scripts/linkedin-oauth/index.js"
   },
   "dependencies": {
     "20": "^3.1.9",
