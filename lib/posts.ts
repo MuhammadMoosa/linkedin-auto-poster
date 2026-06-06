@@ -5,6 +5,7 @@ import {
   readContentFromGitHub,
   writeContentToGitHub,
   GitHubError,
+  isGitHubConfigured,
 } from "./github";
 import {
   assertPersistableStorage,
@@ -89,13 +90,19 @@ export async function loadContent(): Promise<{
   }
 
   if (isGitHubConfigured()) {
-    const { content: raw, metadata } = await readContentFromGitHub();
-    cachedMetadata = metadata;
+    try {
+      const { content: raw, metadata } = await readContentFromGitHub();
+      cachedMetadata = metadata;
 
-    return {
-      content: parseContent(raw),
-      metadata,
-    };
+      return {
+        content: parseContent(raw),
+        metadata,
+      };
+    } catch (error) {
+      logger.warn("GitHub content read failed, using bundled content.json", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   // Vercel/serverless without GitHub: read bundled content.json from the deploy

@@ -1,8 +1,9 @@
-import { mkdir, readFile, readdir, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import {
   readBinaryFromGitHub,
   writeBinaryToGitHub,
+  isGitHubConfigured,
 } from "./github";
 import {
   assertPersistableStorage,
@@ -97,9 +98,9 @@ async function readImageAtPath(
   const filename = path.basename(relativePath);
   const ext = path.extname(filename).toLowerCase();
   const mimeType = MIME_BY_EXT[ext] ?? "image/jpeg";
+  const absolutePath = path.join(process.cwd(), relativePath);
 
   if (shouldUseLocalStorage()) {
-    const absolutePath = path.join(process.cwd(), relativePath);
     try {
       const buffer = await readFile(absolutePath);
       return { buffer, mimeType, filename, relativePath };
@@ -108,30 +109,28 @@ async function readImageAtPath(
     }
   }
 
-  const buffer = await readBinaryFromGitHub(relativePath);
-  if (!buffer) return null;
+  if (isGitHubConfigured()) {
+    try {
+      const buffer = await readBinaryFromGitHub(relativePath);
+      if (buffer) {
+        return { buffer, mimeType, filename, relativePath };
+      }
+    } catch {
+      // fall through to bundled image
+    }
+  }
 
-  return { buffer, mimeType, filename, relativePath };
+  try {
+    const buffer = await readFile(absolutePath);
+    return { buffer, mimeType, filename, relativePath };
+  } catch {
+    return null;
+  }
 }
 
 export async function findDayImageFile(
   day: number
 ): Promise<ResolvedImage | null> {
-  if (shouldUseLocalStorage()) {
-    await ensureImagesDir();
-    try {
-      const files = await readdir(IMAGES_DIR);
-      const match = files.find((file) => {
-        const base = path.basename(file, path.extname(file));
-        return base === `day-${day}`;
-      });
-      if (!match) return null;
-      return readImageAtPath(path.join("data", "images", match));
-    } catch {
-      return null;
-    }
-  }
-
   for (const ext of Object.keys(MIME_BY_EXT)) {
     const relativePath = `data/images/day-${day}${ext}`;
     const image = await readImageAtPath(relativePath);
