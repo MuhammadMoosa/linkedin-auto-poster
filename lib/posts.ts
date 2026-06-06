@@ -88,13 +88,33 @@ export async function loadContent(): Promise<{
     };
   }
 
-  const { content: raw, metadata } = await readContentFromGitHub();
-  cachedMetadata = metadata;
+  if (isGitHubConfigured()) {
+    const { content: raw, metadata } = await readContentFromGitHub();
+    cachedMetadata = metadata;
 
-  return {
-    content: parseContent(raw),
-    metadata,
-  };
+    return {
+      content: parseContent(raw),
+      metadata,
+    };
+  }
+
+  // Vercel/serverless without GitHub: read bundled content.json from the deploy
+  try {
+    logger.debug("Loading bundled content (GitHub not configured)", {
+      path: LOCAL_CONTENT_PATH,
+    });
+    const raw = await readFile(LOCAL_CONTENT_PATH, "utf-8");
+    return {
+      content: parseContent(raw),
+      metadata: null,
+    };
+  } catch (error) {
+    throw new PostsError(
+      "GitHub is not configured. Set GITHUB_TOKEN, GITHUB_OWNER, and GITHUB_REPO.",
+      500,
+      error
+    );
+  }
 }
 
 export async function saveContent(
