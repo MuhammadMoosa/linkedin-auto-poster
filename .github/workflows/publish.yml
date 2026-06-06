@@ -1,0 +1,58 @@
+name: Daily LinkedIn Publish
+
+on:
+  schedule:
+    # Runs daily at 09:00 UTC (adjust as needed)
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Publish next LinkedIn post
+        env:
+          DEPLOY_URL: ${{ secrets.VERCEL_DEPLOY_URL }}
+          PUBLISH_SECRET: ${{ secrets.PUBLISH_SECRET }}
+        run: |
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "Error: VERCEL_DEPLOY_URL secret is not set"
+            exit 1
+          fi
+
+          URL="${DEPLOY_URL%/}/api/publish"
+
+          echo "Calling publish endpoint: $URL"
+
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${PUBLISH_SECRET}" \
+            -H "Accept: application/json" \
+            "$URL")
+
+          echo "Response status: $HTTP_STATUS"
+          cat response.json
+          echo ""
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Publish succeeded"
+            exit 0
+          elif [ "$HTTP_STATUS" -eq 409 ]; then
+            echo "All posts already published (409) — treating as success"
+            exit 0
+          else
+            echo "Publish failed with status $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Check campaign status
+        if: always()
+        env:
+          DEPLOY_URL: ${{ secrets.VERCEL_DEPLOY_URL }}
+        run: |
+          if [ -n "$DEPLOY_URL" ]; then
+            curl -s "${DEPLOY_URL%/}/api/status" | jq . || true
+          fi

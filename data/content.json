@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "title": "AI Engineering LinkedIn Campaign",
+    "description": "10-day content series on AI engineering, LLM optimization, and production ML systems",
+    "generatedAt": "2026-06-06T00:00:00.000Z",
+    "version": "1.0.0",
+    "totalDays": 10,
+    "campaignStartDate": "2026-06-07"
+  },
+  "summaryStats": {
+    "totalPosts": 10,
+    "avgEngagementRate": 4.2,
+    "topHashtags": ["AI", "MachineLearning", "LLM", "MLOps", "SoftwareEngineering"],
+    "optimizationScore": 87,
+    "totalReachEstimate": 45000,
+    "bestPerformingTopic": "LLM Production Patterns"
+  },
+  "pagesTested": [
+    {
+      "name": "Hook Strength",
+      "url": "internal://optimizer/hook",
+      "score": 92,
+      "notes": "Strong opening lines across all posts"
+    },
+    {
+      "name": "Hashtag Density",
+      "url": "internal://optimizer/hashtags",
+      "score": 85,
+      "notes": "3-5 hashtags per post, optimal for reach"
+    },
+    {
+      "name": "Readability",
+      "url": "internal://optimizer/readability",
+      "score": 88,
+      "notes": "Short paragraphs, scannable format"
+    },
+    {
+      "name": "CTA Effectiveness",
+      "url": "internal://optimizer/cta",
+      "score": 83,
+      "notes": "Clear engagement prompts on each post"
+    }
+  ],
+  "timeline": [
+    { "day": 1, "scheduledDate": "2026-06-07", "status": "pending", "title": "The AI Engineering Mindset" },
+    { "day": 2, "scheduledDate": "2026-06-08", "status": "pending", "title": "RAG vs Fine-Tuning" },
+    { "day": 3, "scheduledDate": "2026-06-09", "status": "pending", "title": "Prompt Engineering in Production" },
+    { "day": 4, "scheduledDate": "2026-06-10", "status": "pending", "title": "Evaluating LLM Applications" },
+    { "day": 5, "scheduledDate": "2026-06-11", "status": "pending", "title": "Building AI Agents" },
+    { "day": 6, "scheduledDate": "2026-06-12", "status": "pending", "title": "Cost Optimization for LLMs" },
+    { "day": 7, "scheduledDate": "2026-06-13", "status": "pending", "title": "MLOps for GenAI" },
+    { "day": 8, "scheduledDate": "2026-06-14", "status": "pending", "title": "AI Safety & Guardrails" },
+    { "day": 9, "scheduledDate": "2026-06-15", "status": "pending", "title": "The Future of AI Engineering" },
+    { "day": 10, "scheduledDate": "2026-06-16", "status": "pending", "title": "10 Lessons from 100 AI Projects" }
+  ],
+  "days": [
+    {
+      "day": 1,
+      "title": "The AI Engineering Mindset",
+      "topic": "AI Engineering Fundamentals",
+      "linkedinPost": "Most teams treat AI like a magic API call.\n\nThat's why 80% of AI projects never reach production.\n\nThe AI engineering mindset is different:\n\n→ Start with the problem, not the model\n→ Design for failure from day one\n→ Measure everything — latency, cost, quality\n→ Build eval pipelines before you build features\n→ Treat prompts as code — version, test, review\n\nAI engineering isn't about using ChatGPT.\n\nIt's about building reliable systems that happen to use LLMs.\n\nWhat's the biggest challenge you've faced shipping AI to production?",
+      "hashtags": ["AI", "MachineLearning", "SoftwareEngineering", "MLOps"],
+      "metricsHighlighted": ["80% project failure rate", "Production readiness"],
+      "imageSuggestion": "Diagram showing AI engineering stack: data → model → eval → deploy → monitor",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 2,
+      "title": "RAG vs Fine-Tuning",
+      "topic": "LLM Architecture Decisions",
+      "linkedinPost": "RAG or fine-tuning? Wrong question.\n\nThe right question: What problem are you solving?\n\nUse RAG when:\n• Knowledge changes frequently\n• You need source attribution\n• You want zero training cost\n• Domain data is structured (docs, PDFs, wikis)\n\nUse fine-tuning when:\n• You need consistent output format\n• Style/tone must match your brand\n• Task is narrow and well-defined\n• You have quality training data (1000+ examples)\n\nIn production, most teams use BOTH:\n→ Fine-tune for behavior\n→ RAG for knowledge\n\nI've seen teams spend $50K on fine-tuning when RAG would have solved it in a week.\n\nDon't over-engineer. Match the tool to the task.\n\nWhich approach has worked best for your use case?",
+      "hashtags": ["RAG", "FineTuning", "LLM", "GenAI"],
+      "metricsHighlighted": ["$50K fine-tuning cost comparison", "1000+ training examples threshold"],
+      "imageSuggestion": "Decision tree: RAG vs Fine-tuning flowchart",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 3,
+      "title": "Prompt Engineering in Production",
+      "topic": "Production Prompt Design",
+      "linkedinPost": "Prompt engineering in a notebook ≠ prompt engineering in production.\n\nIn production, your prompts need:\n\n1. Version control (git, not Google Docs)\n2. A/B testing infrastructure\n3. Regression tests with golden datasets\n4. Fallback chains for model failures\n5. Token budget management\n6. Structured output validation\n\nHere's my production prompt template:\n\n```\nSYSTEM: Role + constraints + output format\nCONTEXT: Retrieved docs / user history\nTASK: Specific instruction\nEXAMPLES: 2-3 few-shot examples\nGUARDRAILS: What NOT to do\n```\n\nWe reduced hallucinations by 40% just by adding explicit guardrails and output schema validation.\n\nPrompts are code. Treat them accordingly.\n\nHow do you manage prompts in your team?",
+      "hashtags": ["PromptEngineering", "AI", "LLM", "DevOps"],
+      "metricsHighlighted": ["40% hallucination reduction"],
+      "imageSuggestion": "Production prompt template architecture diagram",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 4,
+      "title": "Evaluating LLM Applications",
+      "topic": "LLM Evaluation Frameworks",
+      "linkedinPost": "You can't improve what you can't measure.\n\nYet most AI teams ship without evals.\n\nHere's a practical eval framework I use:\n\nLevel 1 — Unit evals\n→ Does the output match the schema?\n→ Are required fields present?\n→ Is the response within token limits?\n\nLevel 2 — Quality evals\n→ LLM-as-judge for relevance & accuracy\n→ Semantic similarity to golden answers\n→ Human review on a sample set\n\nLevel 3 — Production evals\n→ User feedback signals (thumbs up/down)\n→ Task completion rates\n→ Latency p95 & cost per request\n\nStart with 50 golden test cases.\nRun them on every prompt change.\nBlock deploys that regress quality.\n\nEvals aren't optional. They're your safety net.\n\nWhat metrics do you track for your AI products?",
+      "hashtags": ["LLM", "Evaluation", "MLOps", "AIQuality"],
+      "metricsHighlighted": ["50 golden test cases", "3-level eval framework"],
+      "imageSuggestion": "Three-tier evaluation pyramid diagram",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 5,
+      "title": "Building AI Agents",
+      "topic": "Agent Architecture",
+      "linkedinPost": "AI agents are having a moment.\n\nBut 90% of \"agents\" are just fancy prompt chains.\n\nA real agent needs:\n\n🧠 Planning — break tasks into steps\n🔧 Tools — APIs, databases, code execution\n💾 Memory — short-term + long-term context\n🔄 Reflection — self-correct on failures\n🛡️ Guardrails — budget limits, permission scopes\n\nThe architecture that works:\n\nUser → Planner → Tool Executor → Evaluator → Response\n         ↑                                    ↓\n         └──────── retry on failure ──────────┘\n\nKey insight: Keep agents focused.\n\nOne agent, one job.\n\nMulti-agent systems add complexity fast. Start with a single agent that does one thing well.\n\nWe built a code review agent that handles 200 PRs/day with 92% developer satisfaction.\n\nAre you building agents? What's your architecture?",
+      "hashtags": ["AIAgents", "Automation", "LLM", "SoftwareEngineering"],
+      "metricsHighlighted": ["200 PRs/day throughput", "92% developer satisfaction"],
+      "imageSuggestion": "Agent loop architecture: plan → act → observe → reflect",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 6,
+      "title": "Cost Optimization for LLMs",
+      "topic": "LLM Cost Management",
+      "linkedinPost": "Your LLM bill doesn't have to be scary.\n\nWe cut inference costs by 65% with these tactics:\n\n1. Model routing\n→ GPT-4 for complex tasks\n→ Smaller models for classification/extraction\n→ Saved 40% alone\n\n2. Prompt compression\n→ Remove redundant context\n→ Use bullet points over prose\n→ Cache system prompts\n\n3. Response caching\n→ Semantic cache for similar queries\n→ 30% cache hit rate = 30% cost savings\n\n4. Batch processing\n→ Non-real-time tasks in batch API\n→ 50% discount on most providers\n\n5. Smart truncation\n→ Limit context window intelligently\n→ Summarize long documents before injection\n\nTrack cost per feature, not just total bill.\n\nThat one expensive endpoint hiding in your app? You'll find it.\n\nWhat's your biggest LLM cost optimization win?",
+      "hashtags": ["LLM", "CostOptimization", "AI", "Startup"],
+      "metricsHighlighted": ["65% cost reduction", "40% savings from model routing", "30% cache hit rate"],
+      "imageSuggestion": "Cost breakdown pie chart with optimization levers",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 7,
+      "title": "MLOps for GenAI",
+      "topic": "GenAI Operations",
+      "linkedinPost": "MLOps evolved. GenAI Ops is the next chapter.\n\nTraditional MLOps:\n→ Train → Validate → Deploy → Monitor\n\nGenAI Ops adds:\n→ Prompt versioning & rollback\n→ Embedding pipeline management\n→ Vector DB health monitoring\n→ LLM provider failover\n→ Content safety filtering\n→ Cost attribution per user/feature\n\nYour GenAI stack should include:\n\n📦 Observability — LangSmith, Langfuse, or custom\n📦 Vector store — Pinecone, Weaviate, pgvector\n📦 Gateway — LiteLLM or custom router\n📦 Eval pipeline — automated regression tests\n📦 Feature flags — gradual rollout of prompt changes\n\nThe teams winning with GenAI treat it as infrastructure, not a demo.\n\nWhat's in your GenAI ops stack?",
+      "hashtags": ["MLOps", "GenAI", "LLM", "DevOps"],
+      "metricsHighlighted": ["Full GenAI ops stack components"],
+      "imageSuggestion": "GenAI Ops pipeline: ingest → embed → retrieve → generate → monitor",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 8,
+      "title": "AI Safety & Guardrails",
+      "topic": "Responsible AI",
+      "linkedinPost": "Shipping AI without guardrails is like deploying without auth.\n\nEssential guardrails for production AI:\n\n🛡️ Input validation\n→ Prompt injection detection\n→ PII scrubbing before LLM calls\n→ Rate limiting per user\n\n🛡️ Output filtering\n→ Content moderation API\n→ Schema enforcement\n→ Confidence thresholds\n\n🛡️ Operational safety\n→ Max token budgets per request\n→ Timeout & circuit breakers\n→ Human-in-the-loop for high-stakes decisions\n\nReal example:\n\nA customer support bot started making up refund policies.\n\nFix: Constrained generation to approved policy docs + confidence scoring. Escalate to human when confidence < 0.8.\n\nResult: 0 policy hallucinations in 3 months.\n\nSafety isn't a feature. It's a requirement.\n\nHow do you handle AI safety in your products?",
+      "hashtags": ["AISafety", "ResponsibleAI", "LLM", "Guardrails"],
+      "metricsHighlighted": ["0 hallucinations in 3 months", "0.8 confidence threshold"],
+      "imageSuggestion": "Guardrails layers: input → model → output → human review",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 9,
+      "title": "The Future of AI Engineering",
+      "topic": "AI Industry Trends",
+      "linkedinPost": "5 predictions for AI engineering in 2026-2027:\n\n1️⃣ Small models win\n→ Domain-specific 7B models will outperform general 70B+ models on most business tasks\n\n2️⃣ Evals become CI/CD standard\n→ Just like unit tests, LLM evals will gate every deployment\n\n3️⃣ AI-native IDEs go mainstream\n→ Copilot was just the beginning. Full AI pair programming becomes default\n\n4️⃣ Multimodal becomes default\n→ Text-only AI apps will feel outdated. Vision + audio + text is the baseline\n\n5️⃣ AI engineers > prompt engineers\n→ The title \"prompt engineer\" fades. \"AI engineer\" becomes a core engineering role\n\nThe meta-skill that matters most?\n\nKnowing when NOT to use AI.\n\nNot every problem needs an LLM. Sometimes a regex and a database query is the right answer.\n\nWhich prediction do you agree with? Which do you think is wrong?",
+      "hashtags": ["AI", "FutureOfWork", "TechTrends", "Engineering"],
+      "metricsHighlighted": ["5 industry predictions for 2026-2027"],
+      "imageSuggestion": "Timeline infographic of AI engineering evolution",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    },
+    {
+      "day": 10,
+      "title": "10 Lessons from 100 AI Projects",
+      "topic": "AI Engineering Retrospective",
+      "linkedinPost": "After 100 AI projects, here are my top 10 lessons:\n\n1. Start with evals, not features\n2. RAG beats fine-tuning for 80% of use cases\n3. The best model is the cheapest one that works\n4. Users don't care about your model — they care about outcomes\n5. Prompt changes are breaking changes — version them\n6. Latency kills adoption faster than bad quality\n7. Build the boring infrastructure first (logging, monitoring, caching)\n8. Human-in-the-loop isn't a weakness — it's a feature\n9. Demo ≠ product. Plan for edge cases from day one\n10. The hardest part isn't the AI — it's the integration\n\nBonus: Document everything. Future you will thank present you.\n\nThis 10-day series covered the fundamentals of AI engineering.\n\nIf you found value in these posts, follow for more deep dives on building production AI systems.\n\nWhich lesson resonates most with your experience?",
+      "hashtags": ["AI", "MachineLearning", "LessonsLearned", "SoftwareEngineering", "GenAI"],
+      "metricsHighlighted": ["100 AI projects retrospective", "10 core lessons"],
+      "imageSuggestion": "Numbered list graphic with key lessons highlighted",
+      "posted": false,
+      "postedAt": null,
+      "linkedInPostId": null
+    }
+  ]
+}
