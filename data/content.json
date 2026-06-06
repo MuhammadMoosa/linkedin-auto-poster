@@ -370,9 +370,9 @@
         "LCP",
         "CLS"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-06T05:23:50.439Z",
+      "linkedInPostId": "playwright",
       "imagePath": "data/images/day-1.png"
     },
     {
@@ -398,7 +398,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-2.png"
     },
     {
       "day": 3,
@@ -424,7 +424,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-3.png"
     },
     {
       "day": 4,
@@ -450,7 +450,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-4.png"
     },
     {
       "day": 5,
@@ -478,7 +478,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-5.png"
     },
     {
       "day": 6,
@@ -504,7 +504,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-6.png"
     },
     {
       "day": 7,
@@ -534,7 +534,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-7.png"
     },
     {
       "day": 8,
@@ -566,7 +566,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-8.png"
     },
     {
       "day": 9,
@@ -593,7 +593,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-9.png"
     },
     {
       "day": 10,
@@ -626,7 +626,7 @@
       "posted": false,
       "postedAt": null,
       "linkedInPostId": null,
-      "imagePath": null
+      "imagePath": "data/images/day-10.png"
     }
   ]
 }

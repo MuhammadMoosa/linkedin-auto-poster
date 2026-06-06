@@ -1,10 +1,13 @@
 import { mkdir, readFile, readdir, writeFile } from "fs/promises";
 import path from "path";
 import {
-  isGitHubConfigured,
   readBinaryFromGitHub,
   writeBinaryToGitHub,
 } from "./github";
+import {
+  assertPersistableStorage,
+  shouldUseLocalStorage,
+} from "./storage";
 
 const IMAGES_DIR = path.join(process.cwd(), "data", "images");
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -23,11 +26,6 @@ const MIME_BY_EXT: Record<string, string> = {
   ".gif": "image/gif",
   ".webp": "image/webp",
 };
-
-function shouldUseLocalStorage(): boolean {
-  if (process.env.USE_LOCAL_STORAGE === "true") return true;
-  return !isGitHubConfigured();
-}
 
 function extensionFromMime(mimeType: string): string {
   switch (mimeType) {
@@ -73,6 +71,7 @@ export async function saveDayImage(
   mimeType: string
 ): Promise<string> {
   validateImageFile(buffer, mimeType);
+  assertPersistableStorage("Saving post images");
 
   const ext = extensionFromMime(mimeType);
   const filename = `day-${day}${ext}`;

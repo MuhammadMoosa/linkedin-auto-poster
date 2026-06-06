@@ -135,7 +135,7 @@ Vercel's filesystem is **ephemeral** — writes don't persist between deployment
 
 ## Vercel Deployment
 
-1. Push the repo to GitHub
+1. Push the repo to GitHub (include `data/images/` and `data/content.json`)
 2. Import the project in [Vercel](https://vercel.com)
 3. Set environment variables in Vercel dashboard:
 
@@ -147,10 +147,20 @@ GITHUB_OWNER
 GITHUB_REPO
 GITHUB_BRANCH
 PUBLISH_SECRET
+CRON_SECRET
 ```
 
 4. **Do not** set `USE_LOCAL_STORAGE` in production
-5. Deploy
+5. Deploy — `vercel.json` runs `/api/publish` daily at **09:00 UTC**
+
+### Vercel Cron vs Mac schedule
+
+| Method | Where it runs | Needs API token? | Images |
+|--------|---------------|------------------|--------|
+| `npm run post:schedule:install` | Your Mac | No (browser login) | Local `data/images/` |
+| Vercel Cron (`vercel.json`) | Vercel cloud | Yes | From GitHub repo |
+
+Browser posting (Playwright) **cannot** run on Vercel — use Mac schedule if you have no LinkedIn API token.
 
 The app uses the Node.js runtime (`export const runtime = "nodejs"`) for full filesystem and fetch API support.
 

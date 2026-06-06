@@ -494,6 +494,14 @@ button {
   font-size: 0.8rem;
 }
 
+.terminal-hint {
+  font-size: 0.85rem;
+  background: var(--bg);
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
 .tips-box li {
   margin-bottom: 0.35rem;
 }

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo -H 127.0.0.1 -p ${PORT:-3005}",
-    "dev:clean": "rm -rf .next && next dev --turbo -H 127.0.0.1 -p ${PORT:-3005}",
+    "dev": "next dev -H 127.0.0.1 -p ${PORT:-3005}",
+    "dev:turbo": "next dev --turbo -H 127.0.0.1 -p ${PORT:-3005}",
+    "dev:clean": "rm -rf .next && next dev -H 127.0.0.1 -p ${PORT:-3005}",
     "dev:webpack": "next dev -H 127.0.0.1 -p ${PORT:-3005}",
     "build": "next build",
     "build:clean": "rm -rf .next && next build",
@@ -12,9 +13,21 @@
     "start:clean": "rm -rf .next && next build && next start -H 127.0.0.1 -p ${PORT:-3005}",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "post:login": "node scripts/browser-post/index.js --login-only",
+    "post:login:fresh": "rm -f linkedin-session.json && node scripts/browser-post/index.js --login-only",
+    "post:days": "node scripts/browser-post/index.js --list",
+    "post:next": "node scripts/browser-post/index.js --next",
+    "post:day": "node scripts/browser-post/index.js --day",
+    "post:manual": "node scripts/browser-post/index.js --manual-image --day",
+    "post:install": "npx playwright install chromium",
+    "post:schedule:install": "zsh scripts/schedule/install.sh",
+    "post:schedule:uninstall": "zsh scripts/schedule/uninstall.sh",
+    "post:schedule:status": "zsh scripts/schedule/status.sh",
+    "post:schedule:run": "zsh scripts/schedule/daily-run.sh"
   },
   "dependencies": {
+    "20": "^3.1.9",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -23,8 +36,10 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "dotenv": "^16.4.7",
     "eslint": "^9.16.0",
     "eslint-config-next": "^15.1.0",
+    "playwright": "^1.49.1",
     "typescript": "^5.7.0"
   },
   "engines": {

@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     ];
     if (dev) {
       config.watchOptions = {
-        pollIntervalMs: 1000,
+        poll: 1000,
         ignored: ["**/node_modules/**", "**/.git/**"],
       };
     }

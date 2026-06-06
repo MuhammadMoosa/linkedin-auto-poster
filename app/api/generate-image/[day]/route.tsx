@@ -1,50 +1,10 @@
-import { ImageResponse } from "next/og";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import {
-  buildPostImageData,
-  LINKEDIN_IMAGE_HEIGHT,
-  LINKEDIN_IMAGE_WIDTH,
-} from "@/lib/image-generator";
-import { getOgFonts } from "@/lib/og-fonts";
-import { PostImageTemplate } from "@/lib/post-image-template";
-import {
-  findPostByDay,
-  loadContent,
-  PostsError,
-  uploadDayImage,
-} from "@/lib/posts";
+import { renderDayImageBuffer } from "@/lib/render-day-image";
+import { PostsError, uploadDayImage } from "@/lib/posts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-async function renderDayImage(dayNumber: number): Promise<ArrayBuffer> {
-  const { content } = await loadContent();
-  const dayPost = findPostByDay(content, dayNumber);
-
-  if (!dayPost) {
-    throw new PostsError(`Day ${dayNumber} not found`, 404);
-  }
-
-  const imageData = buildPostImageData(
-    dayPost,
-    content.meta,
-    content.summaryStats
-  );
-
-  const fonts = await getOgFonts();
-
-  const imageResponse = new ImageResponse(
-    PostImageTemplate({ data: imageData }),
-    {
-      width: LINKEDIN_IMAGE_WIDTH,
-      height: LINKEDIN_IMAGE_HEIGHT,
-      fonts,
-    }
-  );
-
-  return imageResponse.arrayBuffer();
-}
 
 export async function GET(
   request: NextRequest,
@@ -59,8 +19,7 @@ export async function GET(
     }
 
     const save = request.nextUrl.searchParams.get("save") === "true";
-
-    const buffer = Buffer.from(await renderDayImage(dayNumber));
+    const buffer = await renderDayImageBuffer(dayNumber);
 
     if (save) {
       const imagePath = await uploadDayImage(dayNumber, buffer, "image/png");
@@ -77,7 +36,7 @@ export async function GET(
 
     logger.apiRequest("GET", `/api/generate-image/${dayNumber}`, 200);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "no-store",

@@ -6,13 +6,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function verifyPublishSecret(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
+  const querySecret = request.nextUrl.searchParams.get("secret");
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    return true;
+  }
+
   const secret = process.env.PUBLISH_SECRET;
   if (!secret) {
     return true;
   }
-
-  const authHeader = request.headers.get("authorization");
-  const querySecret = request.nextUrl.searchParams.get("secret");
 
   return authHeader === `Bearer ${secret}` || querySecret === secret;
 }

@@ -2,11 +2,14 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { logger } from "./logger";
 import {
-  isGitHubConfigured,
   readContentFromGitHub,
   writeContentToGitHub,
   GitHubError,
 } from "./github";
+import {
+  assertPersistableStorage,
+  shouldUseLocalStorage,
+} from "./storage";
 import {
   appendHashtagsToPost,
   publishToLinkedIn,
@@ -40,13 +43,6 @@ export class PostsError extends Error {
     super(message);
     this.name = "PostsError";
   }
-}
-
-function shouldUseLocalStorage(): boolean {
-  if (process.env.USE_LOCAL_STORAGE === "true") {
-    return true;
-  }
-  return !isGitHubConfigured();
 }
 
 function parseContent(raw: string): FullContentSchema {
@@ -106,6 +102,7 @@ export async function saveContent(
   commitMessage: string
 ): Promise<void> {
   const serialized = serializeContent(content);
+  assertPersistableStorage("Saving content");
 
   if (shouldUseLocalStorage()) {
     logger.debug("Saving content to local filesystem", {

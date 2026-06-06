@@ -42,6 +42,31 @@ function formatApiError(data: {
   return base;
 }
 
+/** Parse API JSON safely — Next.js may return plain "Internal Server Error" on 500. */
+async function parseApiResponse(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+
+  if (!text) {
+    return { error: res.ok ? "Empty response" : `HTTP ${res.status}` };
+  }
+
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    const hint =
+      res.status === 500 && text.includes("Internal Server Error")
+        ? " Server build may be stale — stop the server and run: npm run dev:clean"
+        : "";
+    throw new Error(
+      `Server returned non-JSON (${res.status}): ${text.slice(0, 120)}${hint}`
+    );
+  }
+}
+
+function apiMessage(data: Record<string, unknown>, fallback: string): string {
+  return typeof data.message === "string" ? data.message : fallback;
+}
+
 function StatCard({ stat }: { stat: SummaryStat }) {
   return (
     <div className="stat-card">
@@ -58,9 +83,11 @@ function StatCard({ stat }: { stat: SummaryStat }) {
 function DayCard({
   day,
   onUpdate,
+  apiPublishEnabled,
 }: {
   day: PreviewResponse;
   onUpdate: () => void;
+  apiPublishEnabled: boolean;
 }) {
   const [expanded, setExpanded] = useState(!day.posted);
   const [loading, setLoading] = useState<string | null>(null);
@@ -90,14 +117,17 @@ function DayCard({
       const res = await fetch(`/api/generate-image/${day.day}`, {
         method: "POST",
       });
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!res.ok) throw new Error(formatApiError(data));
 
       setHasImage(true);
       setImageVersion((v) => v + 1);
       handleImageSelect(null);
       onUpdate();
-      return { message: data.message, type: "success" as const };
+      return {
+        message: apiMessage(data, "Image generated"),
+        type: "success" as const,
+      };
     } catch (err) {
       return {
         message: err instanceof Error ? err.message : "Image generation failed",
@@ -126,14 +156,17 @@ function DayCard({
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!res.ok) throw new Error(formatApiError(data));
 
       setHasImage(true);
       setImageVersion((v) => v + 1);
       handleImageSelect(null);
       onUpdate();
-      return { message: data.message, type: "success" as const };
+      return {
+        message: apiMessage(data, "Image generated"),
+        type: "success" as const,
+      };
     } catch (err) {
       return {
         message: err instanceof Error ? err.message : "Upload failed",
@@ -169,11 +202,14 @@ function DayCard({
         });
       }
 
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!res.ok) throw new Error(formatApiError(data));
       handleImageSelect(null);
       onUpdate();
-      return { message: data.message, type: "success" as const };
+      return {
+        message: apiMessage(data, "Image generated"),
+        type: "success" as const,
+      };
     } catch (err) {
       return {
         message: err instanceof Error ? err.message : "Publish failed",
@@ -200,10 +236,13 @@ function DayCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ day: day.day }),
       });
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!res.ok) throw new Error(formatApiError(data));
       onUpdate();
-      return { message: data.message, type: "success" as const };
+      return {
+        message: apiMessage(data, "Image generated"),
+        type: "success" as const,
+      };
     } catch (err) {
       return {
         message: err instanceof Error ? err.message : "Failed to mark as posted",
@@ -237,6 +276,7 @@ function DayCard({
       onUploadImage={(onToast) => runAction(handleUploadImage, onToast)}
       onPublish={(onToast) => runAction(handlePublish, onToast)}
       onMarkPosted={(onToast) => runAction(handleMarkPosted, onToast)}
+      apiPublishEnabled={apiPublishEnabled}
     />
   );
 }
@@ -255,6 +295,7 @@ function DayCardInner({
   onUploadImage,
   onPublish,
   onMarkPosted,
+  apiPublishEnabled,
 }: {
   day: PreviewResponse;
   expanded: boolean;
@@ -269,6 +310,7 @@ function DayCardInner({
   onUploadImage: (onToast: (t: Toast) => void) => void;
   onPublish: (onToast: (t: Toast) => void) => void;
   onMarkPosted: (onToast: (t: Toast) => void) => void;
+  apiPublishEnabled: boolean;
 }) {
   const [localToast, setLocalToast] = useState<Toast | null>(null);
 
@@ -398,18 +440,42 @@ function DayCardInner({
 
             {!day.posted && (
               <>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={loading !== null}
-                  onClick={() => onPublish(showToast)}
-                >
-                  {loading === "publish"
-                    ? "Publishing…"
-                    : hasImage || pendingPreview
-                      ? "🚀 Publish with image"
-                      : "🚀 Publish to LinkedIn"}
-                </button>
+                {apiPublishEnabled ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={loading !== null}
+                    onClick={() => onPublish(showToast)}
+                  >
+                    {loading === "publish"
+                      ? "Publishing…"
+                      : hasImage || pendingPreview
+                        ? "🚀 Publish with image"
+                        : "🚀 Publish to LinkedIn"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={async () => {
+                      const cmd = `npm run post:day -- ${day.day}`;
+                      try {
+                        await navigator.clipboard.writeText(cmd);
+                        showToast({
+                          message: `Copied: ${cmd} — run in terminal`,
+                          type: "success",
+                        });
+                      } catch {
+                        showToast({
+                          message: `Run in terminal: ${cmd}`,
+                          type: "success",
+                        });
+                      }
+                    }}
+                  >
+                    📋 Copy post command
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-success"
@@ -442,17 +508,24 @@ export default function Dashboard({
   const [status, setStatus] = useState(initialStatus);
   const [days, setDays] = useState(initialDays);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/days");
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (data.success) {
-        setStatus(data.status);
-        setDays(data.days);
+        setStatus(data.status as StatusResponse);
+        setDays(data.days as PreviewResponse[]);
+      } else if (!res.ok) {
+        throw new Error(formatApiError(data));
       }
-    } catch {
-      setToast({ message: "Failed to refresh", type: "error" });
+    } catch (err) {
+      setToast({
+        message:
+          err instanceof Error ? err.message : "Failed to refresh dashboard",
+        type: "error",
+      });
     }
   }, []);
 
@@ -461,15 +534,51 @@ export default function Dashboard({
 
     try {
       const res = await fetch("/api/publish", { method: "POST" });
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       if (!res.ok) throw new Error(formatApiError(data));
-      setToast({ message: data.message, type: "success" });
+      setToast({
+        message: String(data.message ?? "Published"),
+        type: "success",
+      });
       await refresh();
     } catch (err) {
       setToast({
         message: err instanceof Error ? err.message : "Publish failed",
         type: "error",
       });
+    }
+  };
+
+  const generateAllImages = async () => {
+    if (
+      !confirm(
+        `Generate stat-card images for all ${status.totalPosts} days?\n\nThis may take a minute.`
+      )
+    ) {
+      return;
+    }
+
+    setGeneratingAll(true);
+    try {
+      const res = await fetch("/api/generate-all-images", { method: "POST" });
+      const data = await parseApiResponse(res);
+      if (!res.ok && res.status !== 207) {
+        throw new Error(formatApiError(data));
+      }
+
+      setToast({
+        message: apiMessage(data, `Generated ${data.generated ?? 0} images`),
+        type: data.success ? "success" : "error",
+      });
+      await refresh();
+    } catch (err) {
+      setToast({
+        message:
+          err instanceof Error ? err.message : "Batch image generation failed",
+        type: "error",
+      });
+    } finally {
+      setGeneratingAll(false);
     }
   };
 
@@ -495,17 +604,26 @@ export default function Dashboard({
 
       {!config.linkedInConfigured && (
         <div className="config-alert">
-          <strong>LinkedIn not configured</strong>
+          <strong>Post from your terminal (browser login — no API token)</strong>
           <p>
-            Create <code>.env.local</code> in the project root with your
-            credentials, then restart the server:
+            Use the dashboard to <strong>generate images</strong> and preview
+            posts. To publish, log in once in Chromium and run:
           </p>
-          <pre>{`LINKEDIN_TOKEN=your_token
-LINKEDIN_PERSON_ID=your_person_id
-USE_LOCAL_STORAGE=true`}</pre>
+          <pre>{`source ~/.nvm/nvm.sh && nvm use 20
+npm run post:login              # first time only
+npm run post:next               # post next day + image
+npm run post:day -- 2           # post a specific day
+
+npm run post:schedule:install   # auto-post daily at 9:30 AM
+npm run post:schedule:status    # check schedule + next day`}</pre>
           <p className="config-hint">
-            Copy from <code>.env.example</code> · Publishing will fail until
-            these are set.
+            <strong>Mac automation (no API token):</strong> use{" "}
+            <code>post:schedule:install</code> above.
+            <br />
+            <strong>Vercel automation:</strong> needs{" "}
+            <code>LINKEDIN_TOKEN</code> + <code>LINKEDIN_PERSON_ID</code> in
+            Vercel env — then daily cron in <code>vercel.json</code> calls{" "}
+            <code>/api/publish</code> automatically.
           </p>
         </div>
       )}
@@ -528,15 +646,31 @@ USE_LOCAL_STORAGE=true`}</pre>
             style={{ width: `${status.completionPercentage}%` }}
           />
         </div>
+        <div className="progress-stats">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={generatingAll}
+            onClick={generateAllImages}
+          >
+            {generatingAll
+              ? `Generating ${status.totalPosts} images…`
+              : `✨ Generate all ${status.totalPosts} images`}
+          </button>
+        </div>
         {!status.campaignComplete && status.nextScheduledPost && (
           <div className="progress-stats">
             <span>
               Next up: <strong>Day {status.nextScheduledPost.day}</strong> —{" "}
               {status.nextScheduledPost.title}
             </span>
-            <button type="button" className="btn btn-primary" onClick={publishNext}>
-              Publish next →
-            </button>
+            {config.linkedInConfigured ? (
+              <button type="button" className="btn btn-primary" onClick={publishNext}>
+                Publish next →
+              </button>
+            ) : (
+              <code className="terminal-hint">npm run post:next</code>
+            )}
           </div>
         )}
       </section>
@@ -561,7 +695,12 @@ USE_LOCAL_STORAGE=true`}</pre>
       <h2 className="section-title">10-Day Content Plan</h2>
 
       {days.map((day) => (
-        <DayCard key={day.day} day={day} onUpdate={refresh} />
+        <DayCard
+          key={day.day}
+          day={day}
+          onUpdate={refresh}
+          apiPublishEnabled={config.linkedInConfigured}
+        />
       ))}
 
       {toast && (

@@ -38,3 +38,11 @@ next-env.d.ts
 
 # vercel
 .vercel
+
+# playwright browser session (local posting)
+linkedin-session.json
+
+# scheduled post logs
+/logs/
+debug-upload/
+debug-composer.png

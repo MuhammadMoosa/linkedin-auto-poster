@@ -1,3 +1,5 @@
+import { isReadOnlyDeployEnvironment, shouldUseLocalStorage } from "./storage";
+
 export interface AppConfigStatus {
   linkedInConfigured: boolean;
   githubConfigured: boolean;
@@ -23,8 +25,13 @@ export function getAppConfigStatus(): AppConfigStatus {
     if (!process.env.GITHUB_REPO) missingEnv.push("GITHUB_REPO");
   }
 
-  const useLocalStorage =
-    process.env.USE_LOCAL_STORAGE === "true" || !githubConfigured;
+  const useLocalStorage = shouldUseLocalStorage();
+
+  if (isReadOnlyDeployEnvironment() && !githubConfigured) {
+    if (!process.env.GITHUB_TOKEN) missingEnv.push("GITHUB_TOKEN");
+    if (!process.env.GITHUB_OWNER) missingEnv.push("GITHUB_OWNER");
+    if (!process.env.GITHUB_REPO) missingEnv.push("GITHUB_REPO");
+  }
 
   return {
     linkedInConfigured: Boolean(
