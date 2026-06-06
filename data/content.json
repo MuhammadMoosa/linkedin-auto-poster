@@ -395,9 +395,9 @@
         "Frontend",
         "PWA"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-06T06:31:02.599Z",
+      "linkedInPostId": "urn:li:share:7468912318169382913",
       "imagePath": "data/images/day-2.png"
     },
     {
