@@ -447,9 +447,9 @@
         "Hydration",
         "Frontend"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-07T09:33:14.711Z",
+      "linkedInPostId": "urn:li:share:7469320558560612352",
       "imagePath": "data/images/day-4.png"
     },
     {
