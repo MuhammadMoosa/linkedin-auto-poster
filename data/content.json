@@ -531,9 +531,9 @@
         "YouTube",
         "Frontend"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-10T09:41:03.589Z",
+      "linkedInPostId": "urn:li:share:7470409688711512064",
       "imagePath": "data/images/day-7.png"
     },
     {
