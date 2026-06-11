@@ -563,9 +563,9 @@
         "LazyLoading",
         "PWA"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-11T09:47:44.373Z",
+      "linkedInPostId": "urn:li:share:7470773757499072513",
       "imagePath": "data/images/day-8.png"
     },
     {
