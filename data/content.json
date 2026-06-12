@@ -590,9 +590,9 @@
         "VPAID",
         "Lighthouse"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-12T09:07:17.387Z",
+      "linkedInPostId": "urn:li:share:7471125965796962304",
       "imagePath": "data/images/day-9.png"
     },
     {
