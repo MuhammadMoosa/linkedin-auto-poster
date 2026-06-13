@@ -623,9 +623,9 @@
         "WebDev",
         "PerformanceOptimization"
       ],
-      "posted": false,
-      "postedAt": null,
-      "linkedInPostId": null,
+      "posted": true,
+      "postedAt": "2026-06-13T09:33:48.886Z",
+      "linkedInPostId": "urn:li:share:7471495029094789120",
       "imagePath": "data/images/day-10.png"
     }
   ]
